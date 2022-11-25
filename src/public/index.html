@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/socket.io/socket.io.js"></script>
+    <title>Emitir</title>
+</head>
+<body>
+    <h1>live</h1>
+
+    <button id="btn">
+        Emitir
+    </button>
+    <video src="" id="video" style="width: 800px;" height="600px" autoplay></video>
+    <canvas id="preview"></canvas>
+    <div class="status"></div>
+
+    <script>
+        var canvas = document.querySelector('#preview');
+        var context = canvas.getContext('2d');
+        var btn = document.querySelector('#btn'); 
+        
+        canvas.style.display = 'none';
+        canvas.width = 512;
+        canvas.height = 384;
+
+        context.width = canvas.width;
+        context.height = canvas.height;
+
+        var video = document.querySelector('#video');
+
+        var socket = io();
+
+        function message(msg){
+            document.querySelector('.status').innerText = msg;
+        }
+
+        function loadCam(stream){
+            video.srcObject = stream;
+            message('Cam active');
+        }
+
+        function errorCam(){
+            message('Cam error');
+        }
+
+        function videoVer(video, content){
+            context.drawImage(video, 0,0, content.width, content.height);
+            socket.emit('stream', canvas.toDataURL('Image/webp'))
+        }
+
+        btn.addEventListener('click', () => {
+            navigator.getUserMedia = (navigator.getUserMedia || navigator.webKitGetUseMedia || navigator.mozGetUserMedia || navigator.msgGetUserMedia)
+
+            if(navigator.getUserMedia){
+                navigator.getUserMedia({video: true}, loadCam, errorCam)
+            }
+
+            var intervalo = setInterval(() => {
+                videoVer(video, context);
+            }, 30)
+        })
+    </script>
+</body>
+</html>
